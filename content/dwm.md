@@ -18,5 +18,5 @@ That should be your guide for upping your dwm power-level, but here are some gen
 
 ## Source code
 
-- [dwm for LARBS](https://github.com/lukesmithxyz/dwm)
+- [dwm for LARBS](https://github.com/astonca/dwm)
 - [original build of dwm](https://dwm.suckless.org)
