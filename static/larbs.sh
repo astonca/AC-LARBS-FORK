@@ -6,22 +6,13 @@
 
 ### OPTIONS AND VARIABLES ###
 
-dotfilesrepo="https://github.com/lukesmithxyz/voidrice.git"
-progsfile="https://raw.githubusercontent.com/LukeSmithxyz/LARBS/master/static/progs.csv"
+dotfilesrepo="https://github.com/astonca/archrice.git"
+progsfile="https://raw.githubusercontent.com/astonca/AC-LARBS-FORK/master/static/progs.csv"
 aurhelper="yay"
 repobranch="master"
 export TERM=ansi
 
-rssurls="https://lukesmith.xyz/rss.xml
-https://videos.lukesmith.xyz/feeds/videos.xml?videoChannelId=2 \"~Luke Smith (Videos)\"
-https://www.youtube.com/feeds/videos.xml?channel_id=UC2eYFnH61tmytImy1mTYvhA \"~Luke Smith (YouTube)\"
-https://lindypress.net/rss
-https://notrelated.xyz/rss
-https://landchad.net/rss.xml
-https://based.cooking/index.xml
-https://artixlinux.org/feed.php \"tech\"
-https://www.archlinux.org/feeds/news/ \"tech\"
-https://github.com/LukeSmithxyz/voidrice/commits/master.atom \"~LARBS dotfiles\""
+rssurls="https://github.com/astonca/archrice/commits/master.atom \"~LARBS dotfiles\""
 
 ### FUNCTIONS ###
 
@@ -194,22 +185,11 @@ putgitrepo() {
 
 vimplugininstall() {
 	# Installs vim plugins.
-	whiptail --infobox "Installing neovim plugins..." 7 60
+	whiptail --infobox "Installing vim plugins..." 7 60
 	mkdir -p "/home/$name/.config/nvim/autoload"
-	curl -Ls "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim" >  "/home/$name/.config/nvim/autoload/plug.vim"
-	chown -R "$name:wheel" "/home/$name/.config/nvim"
+	curl -Ls "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim" >  "/home/$name/.config/vim/autoload/plug.vim"
+	chown -R "$name:wheel" "/home/$name/.config/vim"
 	sudo -u "$name" nvim -c "PlugInstall|q|q"
-}
-
-makeuserjs(){
-	# Get the Arkenfox user.js and prepare it.
-	arkenfox="$pdir/arkenfox.js"
-	overrides="$pdir/user-overrides.js"
-	userjs="$pdir/user.js"
-	ln -fs "/home/$name/.config/firefox/larbs.js" "$overrides"
-	[ ! -f "$arkenfox" ] && curl -sL "https://raw.githubusercontent.com/arkenfox/user.js/master/user.js" > "$arkenfox"
-	cat "$arkenfox" "$overrides" > "$userjs"
-	chown "$name:wheel" "$arkenfox" "$userjs"
 }
 
 finalize() {
@@ -265,7 +245,7 @@ Defaults:%wheel,root runcwd=*" >/etc/sudoers.d/larbs-temp
 
 # Make pacman colorful, concurrent downloads and Pacman eye-candy.
 grep -q "ILoveCandy" /etc/pacman.conf || sed -i "/#VerbosePkgLists/a ILoveCandy" /etc/pacman.conf
-sed -Ei "s/^#(ParallelDownloads).*/\1 = 5/;/^#Color$/s/#//" /etc/pacman.conf
+sed -Ei "s/^#(ParallelDownloads).*/\1 = 300/;/^#Color$/s/#//" /etc/pacman.conf
 
 # Use all cores for compilation.
 sed -i "s/-j2/-j$(nproc)/;/^#MAKEFLAGS/s/^#//" /etc/makepkg.conf
@@ -290,8 +270,8 @@ rm -rf "/home/$name/.git/" "/home/$name/README.md" "/home/$name/LICENSE" "/home/
 [ -s "/home/$name/.config/newsboat/urls" ] ||
 	echo "$rssurls" | sudo -u "$name" tee "/home/$name/.config/newsboat/urls" >/dev/null
 
-# Install vim plugins if not alread present.
-[ ! -f "/home/$name/.config/nvim/autoload/plug.vim" ] && vimplugininstall
+# Install vim plugins if not already present.
+[ ! -f "/home/$name/.config/vim/autoload/plug.vim" ] && vimplugininstall
 
 # Most important command! Get rid of the beep!
 rmmod pcspkr
@@ -322,24 +302,6 @@ dbus-uuidgen >/var/lib/dbus/machine-id
 	# Enable left mouse button by tapping
 	Option "Tapping" "on"
 EndSection' >/etc/X11/xorg.conf.d/40-libinput.conf
-
-# All this below to get Librewolf installed with add-ons and non-bad settings.
-
-whiptail --infobox "Setting browser privacy settings and add-ons..." 7 60
-
-browserdir="/home/$name/.librewolf"
-profilesini="$browserdir/profiles.ini"
-
-# Start librewolf headless so it generates a profile. Then get that profile in a variable.
-sudo -u "$name" librewolf --headless >/dev/null 2>&1 &
-sleep 1
-profile="$(sed -n "/Default=.*.default-default/ s/.*=//p" "$profilesini")"
-pdir="$browserdir/$profile"
-
-[ -d "$pdir" ] && makeuserjs
-
-# Kill the now unnecessary librewolf instance.
-pkill -u "$name" librewolf
 
 # Allow wheel users to sudo with password and allow several system commands
 # (like `shutdown` to run without password).
